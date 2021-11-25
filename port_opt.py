@@ -37,7 +37,8 @@ class RiskModel:
 
     def __post_init__(self):
         # check if the asset covariance matrix is positive definite and full-rank
-        pass
+        if any(np.linalg.eigvals(self.asset_covariance) < 0):
+            raise ValueError('Covariance matrix isn\'nt positive semi-definite')
 
     def __call__(self, *args, **kwargs) -> pd.DataFrame:
         return self.asset_covariance
