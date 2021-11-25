@@ -51,24 +51,10 @@ class RiskModel:
         return self.asset_covariance.columns.tolist()
 
 
-def main():
-    assets_idx = ['a', 'b', 'c']
-    ret = pd.Series(data=[0.0260023, 0.008100891, 0.073774971], index=assets_idx)
-    sigma = [[0.017087987, 0.003298885, 0.001224849],
-             [0.003298885, 0.005900944, 0.004488271],
-             [0.001224849, 0.004488271, 0.063000818]]
-    risk_model = RiskModel.from_matrix(asset_cov=pd.DataFrame(data=sigma, index=assets_idx, columns=assets_idx))
-
-    variance, weights = optimize_portfolio(risk_model=risk_model)
-    port_ret = float(np.linalg.multi_dot([weights.transpose(), ret]))
-    print("Risk =", math.sqrt(variance))
-    print("Return =", port_ret)
-
-
-def optimize_portfolio(risk_model) -> (float, pd.Series):
+def optimize_portfolio(risk_model: RiskModel) -> (float, pd.Series):
     """
     Optimization solve method to build portfolio from covariance matrix
-    :param risk_model:
+    :param risk_model: RiskModel
     :return:
     """
     # Add variables
@@ -91,6 +77,20 @@ def optimize_portfolio(risk_model) -> (float, pd.Series):
         raise OptimizationException('Could not find optimal solution')
     weights = pd.DataFrame(x.value, index=risk_model.assets, columns=['weights'])
     return float(prob.objective.value), weights['weights']
+
+
+def main():
+    assets_idx = ['a', 'b', 'c']
+    ret = pd.Series(data=[0.0260023, 0.008100891, 0.073774971], index=assets_idx)
+    sigma = [[0.017087987, 0.003298885, 0.001224849],
+             [0.003298885, 0.005900944, 0.004488271],
+             [0.001224849, 0.004488271, 0.063000818]]
+    risk_model = RiskModel.from_matrix(asset_cov=pd.DataFrame(data=sigma, index=assets_idx, columns=assets_idx))
+
+    variance, weights = optimize_portfolio(risk_model=risk_model)
+    port_ret = float(np.linalg.multi_dot([weights.transpose(), ret]))
+    print("Risk =", math.sqrt(variance))
+    print("Return =", port_ret)
 
 
 if __name__ == "__main__":
