@@ -6,11 +6,12 @@ The computations are incorrect, for now. I'm working on fixing them.
 import math
 from dataclasses import dataclass
 
-import scipy
+from scipy.special import erf
+from scipy.stats import norm
 
 
 @dataclass
-class BlackScholesMerton:
+class BlackScholes:
     """
     Black-Scholes-Merton pricing class
     """
@@ -22,6 +23,8 @@ class BlackScholesMerton:
     dividend_yield: float = 0.
     is_american_option: bool = False
 
+    _NORM = norm
+
     def __post_init__(self):
         if any([
             self.spot_price,
@@ -31,7 +34,8 @@ class BlackScholesMerton:
             self.dividend_yield
         ]) < 0:
             raise ValueError('Cannot allow negative values for either of: '
-                             'Spot Price, Strike Price, Time to Maturity or Volatility')
+                             'Spot Price, Strike Price, Time to Maturity, Dividend Yield '
+                             'or Volatility')
 
     @property
     def call_value(self) -> float:
@@ -39,7 +43,7 @@ class BlackScholesMerton:
         property to get european call option price
         :return:
         """
-        norm_cdf = scipy.stats.norm.cdf
+        norm_cdf = self._NORM.cdf
         d_one = self._compute_d_one()
         d_two = self._compute_d_two()
         discount = self._compute_discount()
@@ -72,7 +76,7 @@ class BlackScholesMerton:
 
     @property
     def gamma(self):
-        norm_cdf = scipy.stats.norm.cdf
+        norm_cdf = self._NORM.cdf
         d_one = self._compute_d_one()
         temp_val = norm_cdf(d_one) / (self.volatility * self.spot_price * math.sqrt(self.time_to_maturity))
         discount = self._compute_discount()
@@ -84,7 +88,7 @@ class BlackScholesMerton:
         vega
         :return:
         """
-        norm_cdf = scipy.stats.norm.cdf
+        norm_cdf = self._NORM.cdf
         d_one = self._compute_d_one()
         discount = self._compute_discount()
         return discount * self.spot_price * math.sqrt(self.time_to_maturity) * norm_cdf(d_one)
@@ -95,11 +99,11 @@ class BlackScholesMerton:
         property for theta
         :return:
         """
-        norm_cdf = scipy.stats.norm.cdf
+        norm_cdf = self._NORM.cdf
         discount = self._compute_discount()
+        t = self.time_to_maturity
         d_one = self._compute_d_one()
-        d_two = self._compute_d_two()
-        term_1 = -discount * self.spot_price * norm_cdf(d_one) * self.volatility / (2 * math.sqrt(self.time_to_maturity))
+        term_1 = -discount * self.spot_price * norm_cdf(d_one) * self.volatility / (2 * math.sqrt(t))
         term_2 = self.risk_free_rate * discount * self.spot_price * norm_cdf(d_one)
         term_3 = self.risk_free_rate
         return term_1 + term_2 + term_3
@@ -114,6 +118,10 @@ class BlackScholesMerton:
 
     @property
     def implied_volatility(self):
+        """
+        get implied volatility of the option
+        :return:
+        """
         return
 
     @staticmethod
@@ -123,7 +131,7 @@ class BlackScholesMerton:
         :param value:
         :return:
         """
-        return 0.5 * (1 + scipy.special.erf(value/math.sqrt(2)))
+        return 0.5 * (1 + erf(value/math.sqrt(2)))
 
     def _compute_discount(self):
         """
