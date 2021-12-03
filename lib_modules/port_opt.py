@@ -14,7 +14,9 @@ import pandas as pd
 
 
 class OptimizationException(Exception):
-
+    """
+    generic optimization exception
+    """
     def __init__(self, message: str):
         self.message = message
 
@@ -90,8 +92,8 @@ def main():
 
     variance, weights = optimize_portfolio(risk_model=risk_model)
     port_ret = float(np.linalg.multi_dot([weights.transpose(), ret]))
-    print("Risk =", math.sqrt(variance))
-    print("Return =", port_ret)
+    print(f"Portfolio Risk = {math.sqrt(variance):.4f}")
+    print(f"Expected Return = {port_ret:.4f}")
 
 
 if __name__ == "__main__":
