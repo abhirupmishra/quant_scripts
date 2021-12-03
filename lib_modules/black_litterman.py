@@ -1,5 +1,6 @@
 """
-Black-Litterman Asset Allocation
+Black-Litterman Asset Allocation.
+This is a work in progress
 """
 from dataclasses import dataclass
 
