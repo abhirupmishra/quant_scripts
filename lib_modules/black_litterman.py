@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from .math_utils import check_positive_semi_definite
+
 
 @dataclass
 class BlackLitterman:
@@ -19,10 +21,12 @@ class BlackLitterman:
     views: pd.DataFrame
     views_link_matrix: pd.DataFrame
     tao: float = 1
+    name: str = 'BL - Default Model'
 
     def __post_init__(self):
         # check of all the data and dimensions are correct for estimate black-litterman
-        ...
+        check_positive_semi_definite(self.asset_covariance, 'Asset Covariance')
+        check_positive_semi_definite(self.views_uncertainty, 'Views Uncertainity')
 
     def __call__(self, *args, **kwargs) -> pd.Series:
         """
@@ -39,3 +43,5 @@ class BlackLitterman:
         result = pd.Series(term_1, index=assets_idx)
         return result
 
+    def __repr__(self):
+        return f'BlackLitterman - {self.name}'
