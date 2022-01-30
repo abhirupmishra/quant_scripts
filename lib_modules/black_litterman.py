@@ -20,7 +20,8 @@ class BlackLitterman:
     implied_excess_returns: pd.Series
     views: pd.DataFrame
     views_link_matrix: pd.DataFrame
-    tao: float = 1
+    tau: float = 1
+    risk_aversion = 2
     name: str = 'BL - Default Model'
 
     def __post_init__(self):
@@ -33,13 +34,13 @@ class BlackLitterman:
         estimate black-litterman equilibrium excess returns
         :return:
         """
-        tao = self.tao
+        tau = self.tau
         assets_idx = self.implied_excess_returns.index
         p = self.views_link_matrix.to_numpy()
         omega = self.views_uncertainty.to_numpy()
         asset_cov = self.asset_covariance.to_numpy()
 
-        term_1 = np.linalg.inv(tao * asset_cov) + np.linalg.multi_dot([p.T, np.linalg.inv(omega), p])
+        term_1 = np.linalg.inv(tau * asset_cov) + np.linalg.multi_dot([p.T, np.linalg.inv(omega), p])
         result = pd.Series(term_1, index=assets_idx)
         return result
 
