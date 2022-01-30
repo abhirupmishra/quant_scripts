@@ -67,8 +67,10 @@ def factor_information_coefficient(
     grouper = [factor_data.index.get_level_values('date')]
 
     if group_adjust:
-        factor_data = utils.demean_forward_returns(factor_data,
-                                                   grouper + ['group'])
+        factor_data = utils.demean_forward_returns(
+            factor_data=factor_data,
+            grouper=grouper + ['group']
+        )
     if by_group:
         grouper.append('group')
 
@@ -77,41 +79,34 @@ def factor_information_coefficient(
 
 def compute_mean_information_coefficient(
         factor_data: pd.DataFrame,
-        group_adjust: bool =False,
+        group_adjust: bool = False,
         by_group: bool = False,
         by_time: bool = None,
-):
+) -> pd.DataFrame:
     """
     Get the mean information coefficient of specified groups.
     Answers questions like:
-    What is the mean IC for each month?
-    What is the mean IC for each group for our whole timerange?
-    What is the mean IC for for each group, each week?
+        What is the mean IC for each month?
+        What is the mean IC for each group for our whole timerange?
+        What is the mean IC for for each group, each week?
 
-    Parameters
-    ----------
-    factor_data : pd.DataFrame - MultiIndex
-        A MultiIndex DataFrame indexed by date (level 0) and asset (level 1),
-        containing the values for a single alpha factor, forward returns for
-        each period, the factor quantile/bin that factor value belongs to, and
-        (optionally) the group the asset belongs to.
-        - See full explanation in utils.get_clean_factor_and_forward_returns
-    group_adjust : bool
-        Demean forward returns by group before computing IC.
-    by_group : bool
-        If True, take the mean IC for each group.
-    by_time : str (pd time_rule), optional
-        Time window to use when taking mean IC.
-        See http://pandas.pydata.org/pandas-docs/stable/timeseries.html
-        for available options.
-
-    Returns
-    -------
-    ic : pd.DataFrame
-        Mean Spearman Rank correlation between factor and provided
-        forward price movement windows.
+    Args:
+        factor_data (pd.DataFrame): A MultiIndex DataFrame indexed by
+            date (level 0) and asset (level 1),
+            containing the values for a single alpha factor, forward returns for
+            each period, the factor quantile/bin that factor value belongs to, and
+            (optionally) the group the asset belongs to.
+            - See full explanation in utils.get_clean_factor_and_forward_returns
+        group_adjust (bool): Demean forward returns by group before computing IC.
+        by_group (bool): If True, take the mean IC for each group.
+        by_time (str(pd time_rule)): optional
+            Time window to use when taking mean IC.
+            See https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+            for available options.
+    Returns:
+        ic (pd.DataFrame):  Mean Spearman Rank correlation between factor and provided
+            forward price movement windows.
     """
-
     ic = factor_information_coefficient(factor_data, group_adjust, by_group)
 
     grouper = []
@@ -129,10 +124,12 @@ def compute_mean_information_coefficient(
     return ic
 
 
-def factor_weights(factor_data,
-                   demeaned=True,
-                   group_adjust=False,
-                   equal_weight=False):
+def factor_weights(
+        factor_data: pd.DataFrame,
+        demeaned: bool = True,
+        group_adjust: bool = False,
+        equal_weight: bool = False
+):
     """
     Computes asset weights by factor values and dividing by the sum of their
     absolute value (achieving gross leverage of 1). Positive factor values will
@@ -208,11 +205,13 @@ def factor_weights(factor_data,
     return weights
 
 
-def factor_returns(factor_data,
-                   demeaned=True,
-                   group_adjust=False,
-                   equal_weight=False,
-                   by_asset=False):
+def factor_returns(
+        factor_data: pd.DataFrame,
+        demeaned: bool = True,
+        group_adjust: bool = False,
+        equal_weight: bool = False,
+        by_asset: bool = False
+) -> pd.DataFrame:
     """
     Computes period wise returns for portfolio weighted by factor
     values.
@@ -255,11 +254,13 @@ def factor_returns(factor_data,
         return weighted_returns.groupby(level='date').sum()
 
 
-def factor_alpha_beta(factor_data,
-                      returns=None,
-                      demeaned=True,
-                      group_adjust=False,
-                      equal_weight=False):
+def factor_alpha_beta(
+        factor_data: pd.DataFrame,
+        returns: pd.DataFrame = None,
+        demeaned: bool = True,
+        group_adjust: bool = False,
+        equal_weight: bool = False
+) -> pd.DataFrame:
     """
     Compute the alpha (excess returns), alpha t-stat (alpha significance),
     and beta (market exposure) of a factor. A regression is run with
@@ -560,7 +561,7 @@ def compute_mean_returns_spread(mean_returns,
     else:
         std1 = std_err.xs(upper_quant, level='factor_quantile')
         std2 = std_err.xs(lower_quant, level='factor_quantile')
-        joint_std_err = np.sqrt(std1**2 + std2**2)
+        joint_std_err = np.sqrt(std1 ** 2 + std2 ** 2)
 
     return mean_return_difference, joint_std_err
 

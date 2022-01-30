@@ -8,7 +8,7 @@ from scipy import stats, optimize
 from six import iteritems
 from sys import float_info
 
-from .utils import nanmean, nanstd, nanmin, up, down, roll, rolling_window
+from .utils import up, down, roll, rolling_window
 from .periods import ANNUALIZATION_FACTORS, APPROX_BDAYS_PER_YEAR, Periods
 
 
@@ -378,7 +378,7 @@ def max_drawdown(returns, out=None):
 
     max_return = np.fmax.accumulate(cumulative, axis=0)
 
-    nanmin((cumulative - max_return) / max_return, axis=0, out=out)
+    np.nanmin((cumulative - max_return) / max_return, axis=0, out=out)
     if returns_1d:
         out = out.item()
     elif allocated_output and isinstance(returns, pd.DataFrame):
@@ -520,7 +520,7 @@ def annual_volatility(
         return out
 
     ann_factor = annualization_factor(period, annualization)
-    nanstd(returns, ddof=1, axis=0, out=out)
+    np.nanstd(returns, ddof=1, axis=0, out=out)
     out = np.multiply(out, ann_factor ** (1.0 / alpha), out=out)
     if returns_1d:
         out = out.item()
@@ -695,8 +695,8 @@ def sharpe_ratio(returns,
 
     np.multiply(
         np.divide(
-            nanmean(returns_risk_adj, axis=0),
-            nanstd(returns_risk_adj, ddof=1, axis=0),
+            np.nanmean(returns_risk_adj, axis=0),
+            np.nanstd(returns_risk_adj, ddof=1, axis=0),
             out=out,
         ),
         np.sqrt(ann_factor),
@@ -777,7 +777,7 @@ def sortino_ratio(returns,
 
     ann_factor = annualization_factor(period, annualization)
 
-    average_annual_return = nanmean(adj_returns, axis=0) * ann_factor
+    average_annual_return = np.nanmean(adj_returns, axis=0) * ann_factor
     annualized_downside_risk = (
         _downside_risk
         if _downside_risk is not None else
@@ -864,7 +864,7 @@ def downside_risk(returns,
     )
 
     np.square(downside_diff, out=downside_diff)
-    nanmean(downside_diff, axis=0, out=out)
+    np.nanmean(downside_diff, axis=0, out=out)
     np.sqrt(out, out=out)
     np.multiply(out, np.sqrt(ann_factor), out=out)
 
@@ -915,10 +915,10 @@ def excess_sharpe(returns, factor_returns, out=None):
         return out
 
     active_return = _adjust_returns(returns, factor_returns)
-    tracking_error = np.nan_to_num(nanstd(active_return, ddof=1, axis=0))
+    tracking_error = np.nan_to_num(np.nanstd(active_return, ddof=1, axis=0))
 
     out = np.divide(
-        nanmean(active_return, axis=0, out=out),
+        np.nanmean(active_return, axis=0, out=out),
         tracking_error,
         out=out,
     )
@@ -1275,7 +1275,7 @@ def alpha_aligned(returns,
     out = np.subtract(
         np.power(
             np.add(
-                nanmean(alpha_series, axis=0, out=out),
+                np.nanmean(alpha_series, axis=0, out=out),
                 1,
                 out=out
             ),
@@ -1432,16 +1432,16 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
     # `independent` to calculate its variance in the next step, we choose to
     # center `independent`.
 
-    ind_residual = independent - nanmean(independent, axis=0)
+    ind_residual = independent - np.nanmean(independent, axis=0)
 
-    covariances = nanmean(ind_residual * returns, axis=0)
+    covariances = np.nanmean(ind_residual * returns, axis=0)
 
     # We end up with different variances in each column here because each
     # column may have a different subset of the data dropped due to missing
     # data in the corresponding dependent column.
     # shape: (M,)
     np.square(ind_residual, out=ind_residual)
-    independent_variances = nanmean(ind_residual, axis=0)
+    independent_variances = np.nanmean(ind_residual, axis=0)
     independent_variances[independent_variances < 1.0e-30] = np.nan
 
     np.divide(covariances, independent_variances, out=out)
@@ -1866,7 +1866,7 @@ def gpd_loglikelihood_scale_only(scale, price_data):
     n = len(price_data)
     data_sum = price_data.sum()
     result = -1 * float_info.max
-    if (scale >= 0):
+    if scale >= 0:
         result = ((-n*np.log(scale)) - (data_sum/scale))
     return result
 
